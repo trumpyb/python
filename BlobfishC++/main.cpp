@@ -51,7 +51,7 @@ long rank_8=0x00000000000000ff;
 
 long makemove(int start, int end, long bitboard){
   long output=bitboard-pow(2,start);
-  output=output+pow(2,end);
+  output=output|long (pow(2,end));
   return output;
 }
 
@@ -68,7 +68,7 @@ void printbitboard(long bitboard) {
 }
 
 int lan(string move) {
-  string indx="abcdefgh";
+  string indx="hgfedcba";
   int sqx=indx.find(move[0]);
   int sqy=move[1]-'0';
   return 63-((sqy*8)-(8-sqx));
@@ -177,8 +177,26 @@ vector<string> get_moves(bool color){
 
 
 int main() {
-  vector<string> moves= get_moves(false);
-  for(string i: moves){
-    cout << i << ' ';
+  bool turn=true;
+  while(true){
+    string input;
+    printboard();
+    vector<string> moves= get_moves(turn);
+    for(string i: moves){
+      cout << i << ' ';
+    }
+    cout << '\n' << "input move" << '\n';
+    cin >> input;
+    int start=lan(input.substr(0,2));
+    int end=lan(input.substr(2,2));
+    cout << '\n' << start << ' ' << end << '\n';
+    pawn=makemove(start, end, pawn);
+    if(turn){
+      white=makemove(start, end, white);
+    }
+    if(not(turn)){
+      black=makemove(start, end, black);
+    }
+    turn=not(turn);
   }
 }
