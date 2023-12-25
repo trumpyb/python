@@ -19,6 +19,8 @@ long RANK_3=RANK_4 << 8;
 long RANK_2=RANK_3 << 8;
 long RANK_1=RANK_2 << 8;
 
+long RANKS[8]={RANK_1,RANK_2,RANK_3,RANK_4,RANK_5,RANK_6,RANK_7,RANK_8};
+
 long FILE_A=0x0101010101010101;
 long FILE_B=FILE_A << 1;
 long FILE_C=FILE_B << 1;
@@ -27,6 +29,8 @@ long FILE_E=FILE_D << 1;
 long FILE_F=FILE_E << 1;
 long FILE_G=FILE_F << 1;
 long FILE_H=FILE_G << 1;
+
+long FILES[8]={FILE_A,FILE_B,FILE_C,FILE_D,FILE_E,FILE_F,FILE_G,FILE_H};
 
 string names[64]={"a8","b8","c8","d8","e8","f8","g8","h8","a7","b7","c7","d7","e7","f7","g7","h7","a6","b6","c6","d6","e6","f6","g6","h6","a5","b5","c5","d5","e5","f5","g5","h5","a4","b4","c4","d4","e4","f4","g4","h4","a3","b3","c3","d3","e3","f3","g3","h3","a2","b2","c2","d2","e2","f2","g2","h2","a1","b1","c1","d1","e1","f1","g1","h1"};
 
@@ -64,10 +68,7 @@ long A2R = (0x0201000000000000);
 long A1R = (0x0100000000000000);
 */
 
-
-
 long ROOK_PCB[64]={72340172838076926,144680345676153597,289360691352306939,578721382704613623,1157442765409226991,2314885530818453727,4629771061636907199,-9187201950435737473,72340172838141441,144680345676217602,289360691352369924,578721382704674568,1157442765409283856,2314885530818502432,4629771061636939584,-9187201950435737728,72340172854657281,144680345692602882,289360691368494084,578721382720276488,1157442765423841296,2314885530830970912,4629771061645230144,-9187201950435803008,72340177082712321,144680349887234562,289360695496279044,578721386714368008,1157442769150545936,2314885534022901792,4629771063767613504,-9187201950452514688,72341259464802561,144681423712944642,289361752209228804,578722409201797128,1157443723186933776,2314886351157207072,4629771607097753664,-9187201954730704768,72618349279904001,144956323094725122,289632270724367364,578984165983651848,1157687956502220816,2315095537539358752,4629910699613634624,-9187203049947365248,143553341945872641,215330564830528002,358885010599838724,645993902138460168,1220211685215703056,2368647251370188832,4665518383679160384,-9187483425412448128,-143832609275707135,-215607624513486334,-359157654989044732,-646257715940161528,-1220457837842395120,-2368858081646862304,-4665658569255796672,9187484529235886208};
-
 
 long BISHOP_PCB[64]={-9205322385119247872,36099303471056128,141012904249856,550848566272,6480472064,1108177604608,283691315142656,72624976668147712,4620710844295151618,-9205322385119182843,36099303487963146,141017232965652,1659000848424,283693466779728,72624976676520096,145249953336262720,2310355422147510788,4620710844311799048,-9205322380790986223,36100411639206946,424704217196612,72625527495610504,145249955479592976,290499906664153120,1155177711057110024,2310355426409252880,4620711952330133792,-9205038694072573375,108724279602332802,145390965166737412,290500455356698632,580999811184992272,577588851267340304,1155178802063085600,2310639079102947392,4693335752243822976,-9060072569221905919,326598935265674242,581140276476643332,1161999073681608712,288793334762704928,577868148797087808,1227793891648880768,2455587783297826816,4911175566595588352,-8624392940535152127,1197958188344280066,2323857683139004420,144117404414255168,360293502378066048,720587009051099136,1441174018118909952,2882348036221108224,5764696068147249408,-6917353036926680575,4611756524879479810,567382630219904,1416240237150208,2833579985862656,5667164249915392,11334324221640704,22667548931719168,45053622886727936,18049651735527937};
 
@@ -82,8 +83,6 @@ long BLACK_PAWN_PUSH_PCB[64]={0,0,0,0,0,0,0,0,16842752,33685504,67371008,1347420
 long WHITE_PAWN_CAPTURE_PCB[64]={0,0,0,0,0,0,0,0,2,5,10,20,40,80,160,64,512,1280,2560,5120,10240,20480,40960,16384,131072,327680,655360,1310720,2621440,5242880,10485760,4194304,33554432,83886080,167772160,335544320,671088640,1342177280,2684354560,1073741824,8589934592,21474836480,42949672960,85899345920,171798691840,343597383680,687194767360,274877906944,2199023255552,5497558138880,10995116277760,21990232555520,43980465111040,87960930222080,175921860444160,70368744177664,0,0,0,0,0,0,0,0};
 
 long BLACK_PAWN_CAPTURE_PCB[64]={0,0,0,0,0,0,0,0,131072,327680,655360,1310720,2621440,5242880,10485760,4194304,33554432,83886080,167772160,335544320,671088640,1342177280,2684354560,1073741824,8589934592,21474836480,42949672960,85899345920,171798691840,343597383680,687194767360,274877906944,2199023255552,5497558138880,10995116277760,21990232555520,43980465111040,87960930222080,175921860444160,70368744177664,562949953421312,1407374883553280,2814749767106560,5629499534213120,11258999068426240,22517998136852480,45035996273704960,18014398509481984,144115188075855872,360287970189639680,720575940379279360,1441151880758558720,2882303761517117440,5764607523034234880,-6917529027641081856,4611686018427387904,0,0,0,0,0,0,0,0};
-
-
 
 vector<long> FEN_TO_BITBOARD(string fen){
   long pawn=0;
@@ -201,6 +200,69 @@ int lan(string move) {
   return 63-((sqy*8)-(8-sqx));
 }
 
+int file_find(int square){
+  return square%8;
+}
+
+int rank_find(int square){
+  return 7-(square-file_find(square))/8;
+}
+
+long rookmoves(int square, vector<long> bitboards, bool color){
+
+  long blockers_board = (ROOK_PCB[square]&(bitboards[6]|bitboards[7]));
+  long onsquare = 1ULL << square;
+
+  long Candidate_moves_left = 0;
+  long Candidate_moves_right = 0;
+  long Candidate_moves_up = 0;
+  long Candidate_moves_down= 0;
+
+  if((onsquare&(~FILE_A))!=0){
+    for(int x = 1; x<8; x++){
+      Candidate_moves_left |= onsquare >> x;
+      if( ((Candidate_moves_left&blockers_board)!=0)||(file_find(square-x)==0)){
+        break;
+      }
+    }
+  }
+
+  if((onsquare&(~FILE_H))!=0){
+    for(int x = 1; x<8; x++){
+      Candidate_moves_right |= onsquare << x;
+      if( ((Candidate_moves_right&blockers_board)!=0)||(file_find(square+x)==7)){
+        break;
+      }
+    }
+  }
+
+  if((onsquare&(~RANK_8))!=0){
+    for(int x = 1; x<8; x++){
+      Candidate_moves_up |= onsquare >> (8*x);
+      if( ((Candidate_moves_up&blockers_board)!=0)||(rank_find(square-(8*x))==0)){
+        break;
+      }
+    }
+  }
+
+  if((onsquare&(~RANK_1))!=0){
+    for(int x = 1; x<8; x++){
+      Candidate_moves_down |= onsquare << (8*x);
+      if( ((Candidate_moves_down&blockers_board)!=0)||(rank_find(square+(8*x))==0)){
+        break;
+      }
+    }
+  }
+
+
+  long Candidate_moves= Candidate_moves_left|Candidate_moves_right|Candidate_moves_up|Candidate_moves_down;
+
+  if(color){
+    return Candidate_moves&(~bitboards[6]);
+  }
+  return Candidate_moves&(~bitboards[7]);
+
+}
 
 vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
   vector<string> output={};
@@ -209,6 +271,7 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
   if(color){
     bitset<64> pawn(bitboards[0]&bitboards[6]);
     bitset<64> knight(bitboards[1]&bitboards[6]);
+    bitset<64> rook(bitboards[3]&bitboards[6]);
     bitset<64> king(bitboards[5]&bitboards[6]);
     for(int x=0; x<64; x++){
       for(int y=0; y<64; y++){
@@ -224,27 +287,41 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
               output.push_back(start+names[y]);
             }
           }
+        
         if(knight[x]==1){
           bitset<64> n(KNIGHT_PCB[x]&(~bitboards[6]));
           if(n[y]==1){
             output.push_back(start+names[y]);
           }
         }
+
+        if(rook[x]==1){
+          bitset<64> r(rookmoves(x, bitboards, color));
+          if(r[y]==1){
+            output.push_back(start+names[y]);
+          }
+        }
+        
         if(king[x]==1){
           bitset<64> k(KING_PCB[x]&(~bitboards[6]));
           if(k[y]==1){
             output.push_back(start+names[y]);
           }
         }
+
+        
       }
     }
   }else{
     bitset<64> pawn(bitboards[0]&bitboards[7]);
     bitset<64> knight(bitboards[1]&bitboards[7]);
+    bitset<64> rook(bitboards[3]&bitboards[7]);
     bitset<64> king(bitboards[5]&bitboards[7]);
+    
     for(int x=0; x<64; x++){
       for(int y=0; y<64; y++){
         string start=names[x];
+        
         if(pawn[x]==1){
           bitset<64> ppush(BLACK_PAWN_PUSH_PCB[x]&(~bitboards[7])&(~bitboards[6]));
           bitset<64> pcapt(BLACK_PAWN_CAPTURE_PCB[x]&bitboards[7]);
@@ -256,12 +333,21 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
               output.push_back(start+names[y]);
             }
           }
+        
         if(knight[x]==1){
           bitset<64> n(KNIGHT_PCB[x]&(~bitboards[7]));
           if(n[y]==1){
             output.push_back(start+names[y]);
           }
         }
+
+        if(rook[x]==1){
+          bitset<64> r(rookmoves(x, bitboards, color));
+          if(r[y]==1){
+            output.push_back(start+names[y]);
+          }
+        }
+        
         if(king[x]==1){
           bitset<64> k(KING_PCB[x]&(~bitboards[7]));
           if(k[y]==1){
@@ -274,7 +360,6 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
 
   return output;
 }
-
 
 vector<long> make_move(vector<long> bitboards, string move){
   int start=lan(move.substr(0,2));
@@ -305,13 +390,5 @@ int main() {
 
   vector<long> bitboards=FEN_TO_BITBOARD(fen);
 
-  bitboards=make_move(bitboards, "e2e4");
-  bitboards=make_move(bitboards, "e7e5");
-
-  printboard(bitboards);
-  cout << '\n';
-
-  for(string move : pseudolegal_moves(bitboards, true)){
-    cout << move << '\n';
-  }
+  printbitboard(rookmoves(0, bitboards, true));
 }
