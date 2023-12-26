@@ -10,6 +10,11 @@
 using namespace std;
 
 
+long WHITE_CASTLE_KINGSIDE=(0x6000000000000000);
+long WHITE_CASTLE_QUEENSIDE=(0x0e00000000000000);
+long BLACK_CASTLE_KINGSIDE=(0x0000000000000060);
+long BLACK_CASTLE_QUEENSIDE=(0x000000000000000e);
+
 long RANK_8=0x00000000000000ff;
 long RANK_7=RANK_8 << 8;
 long RANK_6=RANK_7 << 8;
@@ -93,6 +98,8 @@ vector<long> FEN_TO_BITBOARD(string fen){
   long king=0;
   long white=0;
   long black=0;
+  long castle_mask=0x9100000000000091;
+  long ep_mask=0;
   
   int rank = 0;
   int file = 0;
@@ -134,7 +141,7 @@ vector<long> FEN_TO_BITBOARD(string fen){
       }
   }
 
-  return vector<long> {pawn,knight,bishop,rook,queen,king,white,black};
+  return vector<long> {pawn,knight,bishop,rook,queen,king,white,black,castle_mask,ep_mask};
 }
 
 void printboard( vector<long> bitboards){
@@ -264,27 +271,176 @@ long rookmoves(int square, vector<long> bitboards, bool color){
 
 }
 
-vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
-  vector<string> output={};
-  
+long bishopmoves(int square, vector<long> bitboards, bool color){
+
+  long blockers_board = (BISHOP_PCB[square]&(bitboards[6]|bitboards[7]));
+  long onsquare = 1ULL << square;
+
+  long Candidate_moves_NW = 0;
+  long Candidate_moves_NE = 0;
+  long Candidate_moves_SE = 0;
+  long Candidate_moves_SW= 0;
+
+  long NW=~(FILE_A|RANK_8);
+  long NE=~(FILE_H|RANK_8);
+  long SE=~(FILE_H|RANK_1);
+  long SW=~(FILE_A|RANK_1);
+
+  if((onsquare&(NW))!=0){
+    for(int x = 1; x<8; x++){
+      Candidate_moves_NW |= onsquare >> (7*x);
+      if( ((Candidate_moves_NW&blockers_board)!=0)||(file_find(square-(7*x))==0)){
+        break;
+      }
+    }
+  }
+
+  if((onsquare&(SW))!=0){
+    for(int x = 1; x<8; x++){
+      Candidate_moves_SW |= onsquare << (7*x);
+      if( ((Candidate_moves_SW&blockers_board)!=0)||(file_find(square+(7*x))==7)){
+        break;
+      }
+    }
+  }
+
+  if((onsquare&(NE))!=0){
+    for(int x = 1; x<8; x++){
+      Candidate_moves_NE |= onsquare >> (9*x);
+      if( ((Candidate_moves_NE&blockers_board)!=0)||(rank_find(square-(9*x))==0)){
+        break;
+      }
+    }
+  }
+
+  if((onsquare&(SE))!=0){
+    for(int x = 1; x<8; x++){
+      Candidate_moves_SE |= onsquare << (9*x);
+      if( ((Candidate_moves_SE&blockers_board)!=0)||(rank_find(square+(9*x))==0)){
+        break;
+      }
+    }
+  }
+
+
+  long Candidate_moves= Candidate_moves_NW|Candidate_moves_SW|Candidate_moves_NE|Candidate_moves_SE;
+
+  if(color){
+    return Candidate_moves&(~bitboards[6]);
+  }
+  return Candidate_moves&(~bitboards[7]);
+
+}
+
+long ATTACK_MASK(vector<long> bitboards, bool color){
+  long output = 0;
+
+  bitset<64> pawn(bitboards[0]);
+  bitset<64> knight(bitboards[1]);
+  bitset<64> bishop(bitboards[2]);
+  bitset<64> rook(bitboards[3]);
+  bitset<64> queen(bitboards[4]);
+  bitset<64> king(bitboards[5]);
   
   if(color){
     bitset<64> pawn(bitboards[0]&bitboards[6]);
     bitset<64> knight(bitboards[1]&bitboards[6]);
+    bitset<64> bishop(bitboards[2]&bitboards[6]);
     bitset<64> rook(bitboards[3]&bitboards[6]);
+    bitset<64> queen(bitboards[4]&bitboards[6]);
+    bitset<64> king(bitboards[5]&bitboards[6]);
+    for(int x=0; x<64; x++){
+      if(pawn[x]==1){
+        output |= WHITE_PAWN_CAPTURE_PCB[x];
+      }
+      if(knight[x]==1){
+        output |= KNIGHT_PCB[x];
+      }
+      if(bishop[x]==1){
+        output |= bishopmoves(x, bitboards, color);
+      }
+      if(rook[x]==1){
+        output |= rookmoves(x, bitboards, color);
+      }
+      if(queen[x]==1){
+        output |= bishopmoves(x, bitboards, color)|rookmoves(x, bitboards, color);
+      }
+      if(king[x]==1){
+        output |= KING_PCB[x];
+      }
+    }
+    return output&(~bitboards[6]);
+  }else{
+    bitset<64> pawn(bitboards[0]&bitboards[7]);
+    bitset<64> knight(bitboards[1]&bitboards[7]);
+    bitset<64> bishop(bitboards[2]&bitboards[7]);
+    bitset<64> rook(bitboards[3]&bitboards[7]);
+    bitset<64> queen(bitboards[4]&bitboards[7]);
+    bitset<64> king(bitboards[5]&bitboards[7]);
+    for(int x=0; x<64; x++){
+      if(pawn[x]==1){
+        output |= BLACK_PAWN_CAPTURE_PCB[x];
+      }
+      if(knight[x]==1){
+        output |= KNIGHT_PCB[x];
+      }
+      if(bishop[x]==1){
+        output |= bishopmoves(x, bitboards, color);
+      }
+      if(rook[x]==1){
+        output |= rookmoves(x, bitboards, color);
+      }
+      if(queen[x]==1){
+        output |= bishopmoves(x, bitboards, color)|rookmoves(x, bitboards, color);
+      }
+      if(king[x]==1){
+        output |= KING_PCB[x];
+      }
+    }
+    return output&(~bitboards[7]);
+  }
+
+  
+}
+
+vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
+  vector<string> output={};
+  bitboards[9]=0;
+  
+  if(color){
+    bitset<64> pawn(bitboards[0]&bitboards[6]);
+    bitset<64> knight(bitboards[1]&bitboards[6]);
+    bitset<64> bishop(bitboards[2]&bitboards[6]);
+    bitset<64> rook(bitboards[3]&bitboards[6]);
+    bitset<64> queen(bitboards[4]&bitboards[6]);
     bitset<64> king(bitboards[5]&bitboards[6]);
     for(int x=0; x<64; x++){
       for(int y=0; y<64; y++){
+        
         string start=names[x];
         if(pawn[x]==1){
           bitset<64> ppush(WHITE_PAWN_PUSH_PCB[x]&(~bitboards[7])&(~bitboards[6]));
           bitset<64> pcapt(WHITE_PAWN_CAPTURE_PCB[x]&bitboards[7]);
           
             if(ppush[y]==1){
-              output.push_back(start+names[y]);
+              if(y<=7){
+                output.push_back(start+names[y]+"n");
+                output.push_back(start+names[y]+"b");
+                output.push_back(start+names[y]+"r");
+                output.push_back(start+names[y]+"q");
+              }else{
+                output.push_back(start+names[y]);
+              }
             }
             if(pcapt[y]==1){
-              output.push_back(start+names[y]);
+              if(y<=7){
+                output.push_back(start+names[y]+"n");
+                output.push_back(start+names[y]+"b");
+                output.push_back(start+names[y]+"r");
+                output.push_back(start+names[y]+"q");
+              }else{
+                output.push_back(start+names[y]);
+              }
             }
           }
         
@@ -295,9 +451,23 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
           }
         }
 
+        if(bishop[x]==1){
+          bitset<64> b(bishopmoves(x, bitboards, color));
+          if(b[y]==1){
+            output.push_back(start+names[y]);
+          }
+        }
+
         if(rook[x]==1){
           bitset<64> r(rookmoves(x, bitboards, color));
           if(r[y]==1){
+            output.push_back(start+names[y]);
+          }
+        }
+
+        if(queen[x]==1){
+          bitset<64> q(rookmoves(x, bitboards, color)|bishopmoves(x, bitboards, color));
+          if(q[y]==1){
             output.push_back(start+names[y]);
           }
         }
@@ -315,7 +485,9 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
   }else{
     bitset<64> pawn(bitboards[0]&bitboards[7]);
     bitset<64> knight(bitboards[1]&bitboards[7]);
+    bitset<64> bishop(bitboards[2]&bitboards[7]);
     bitset<64> rook(bitboards[3]&bitboards[7]);
+    bitset<64> queen(bitboards[4]&bitboards[7]);
     bitset<64> king(bitboards[5]&bitboards[7]);
     
     for(int x=0; x<64; x++){
@@ -327,10 +499,25 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
           bitset<64> pcapt(BLACK_PAWN_CAPTURE_PCB[x]&bitboards[7]);
 
             if(ppush[y]==1){
-              output.push_back(start+names[y]);
+              
+              if(y>=56){
+                output.push_back(start+names[y]+"n");
+                output.push_back(start+names[y]+"b");
+                output.push_back(start+names[y]+"r");
+                output.push_back(start+names[y]+"q");
+              }else{
+                output.push_back(start+names[y]);
+              }
             }
             if(pcapt[y]==1){
-              output.push_back(start+names[y]);
+              if(y>=56){
+                output.push_back(start+names[y]+"n");
+                output.push_back(start+names[y]+"b");
+                output.push_back(start+names[y]+"r");
+                output.push_back(start+names[y]+"q");
+              }else{
+                output.push_back(start+names[y]);
+              }
             }
           }
         
@@ -341,9 +528,23 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
           }
         }
 
+        if(bishop[x]==1){
+          bitset<64> b(bishopmoves(x, bitboards, color));
+          if(b[y]==1){
+            output.push_back(start+names[y]);
+          }
+        }
+
         if(rook[x]==1){
           bitset<64> r(rookmoves(x, bitboards, color));
           if(r[y]==1){
+            output.push_back(start+names[y]);
+          }
+        }
+
+        if(queen[x]==1){
+          bitset<64> q(rookmoves(x, bitboards, color)|bishopmoves(x, bitboards, color));
+          if(q[y]==1){
             output.push_back(start+names[y]);
           }
         }
@@ -360,10 +561,13 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
 
   return output;
 }
-
+  
 vector<long> make_move(vector<long> bitboards, string move){
+  
   int start=lan(move.substr(0,2));
   int end=lan(move.substr(2,2));
+  
+  
 
   vector<long> output={};
   
@@ -381,14 +585,34 @@ vector<long> make_move(vector<long> bitboards, string move){
     }
     output.push_back(BB);
   }
+  
+  if(abs(end-start)==16&&((bitboards[0]&(1ULL << start))!=0)){
+    output[9] = 1ULL << end;
+  }
+  if(move.length()==5){
+    bitboards[0]-=1ULL << end;
+    string piece = move.substr(4,1);
+    if(piece=="n"){
+      bitboards[1]+=1ULL<<end;
+    }
+    if(piece=="b"){
+      bitboards[2]+=1ULL<<end;
+    }
+    if(piece=="r"){
+      bitboards[3]+=1ULL<<end;
+    }
+    if(piece=="q"){
+      bitboards[4]+=1ULL<<end;
+    }
+  }
   return output;
 }
 
 int main() {
   string fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-  vector<string> pieces={"pawn","knight","bishop","rook","queen","king","white","black"};
+  vector<string> pieces={"pawn","knight","bishop","rook","queen","king","white","black","castle_mask","ep_mask"};
 
   vector<long> bitboards=FEN_TO_BITBOARD(fen);
 
-  printbitboard(rookmoves(0, bitboards, true));
+  printboard(bitboards);
 }
