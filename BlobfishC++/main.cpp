@@ -6,6 +6,7 @@
 #include <vector>
 #include <cctype>
 #include <algorithm>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -406,6 +407,18 @@ long ATTACK_MASK(vector<long> bitboards, bool color){
 vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
   vector<string> output={};
   bitboards[9]=0;
+
+  long attack_board=ATTACK_MASK(bitboards, !color);
+  bitset<64> CASTLE_HAS_MOVED(bitboards[8]);
+
+  bool a8_moved=(CASTLE_HAS_MOVED[0]==1);
+  bool e8_moved=(CASTLE_HAS_MOVED[4]==1);
+  bool h8_moved=(CASTLE_HAS_MOVED[7]==1);
+
+  bool a1_moved=(CASTLE_HAS_MOVED[56]==1);
+  bool e1_moved=(CASTLE_HAS_MOVED[60]==1);
+  bool h1_moved=(CASTLE_HAS_MOVED[63]==1);
+
   
   if(color){
     bitset<64> pawn(bitboards[0]&bitboards[6]);
@@ -482,7 +495,21 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
         
       }
     }
+
+    long kingside_attacked = WHITE_CASTLE_KINGSIDE&attack_board;
+    long kingside_full= WHITE_CASTLE_KINGSIDE&(bitboards[6]|bitboards[7]);
+    long queenside_attacked= WHITE_CASTLE_QUEENSIDE&attack_board;
+    long queenside_full=WHITE_CASTLE_QUEENSIDE&(bitboards[6]|bitboards[7]);
+
+    if(((kingside_full+kingside_attacked)==0)&&e1_moved&&h1_moved){
+      output.push_back("e1g1");
+    }
+    if(((queenside_full+queenside_attacked)==0)&&e1_moved&&a1_moved){
+      output.push_back("e1c1");
+    }
+    
   }else{
+    
     bitset<64> pawn(bitboards[0]&bitboards[7]);
     bitset<64> knight(bitboards[1]&bitboards[7]);
     bitset<64> bishop(bitboards[2]&bitboards[7]);
@@ -557,6 +584,17 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
         }
       }
     }
+    long kingside_attacked = BLACK_CASTLE_KINGSIDE&attack_board;
+    long kingside_full= BLACK_CASTLE_KINGSIDE&(bitboards[6]|bitboards[7]);
+    long queenside_attacked= BLACK_CASTLE_QUEENSIDE&attack_board;
+    long queenside_full=BLACK_CASTLE_QUEENSIDE&(bitboards[6]|bitboards[7]);
+
+    if(((kingside_full+kingside_attacked)==0)&&e8_moved&&h8_moved){
+      output.push_back("e8g8");
+    }
+    if(((queenside_full+queenside_attacked)==0)&&e8_moved&&a8_moved){
+      output.push_back("e8c8");
+    }
   }
 
   return output;
@@ -605,6 +643,21 @@ vector<long> make_move(vector<long> bitboards, string move){
       bitboards[4]+=1ULL<<end;
     }
   }
+  output[8] &= 0x9100000000000091;
+
+  if(move=="e1g1"){
+    output=make_move(output, "h1f1");
+  }
+  if(move=="e1c1"){
+    output=make_move(output, "a1d1");
+  }
+  if(move=="e8g8"){
+    output=make_move(output, "h8f8");
+  }
+  if(move=="e8c8"){
+    output=make_move(output, "a8d8");
+  }
+  
   return output;
 }
 
@@ -613,6 +666,29 @@ int main() {
   vector<string> pieces={"pawn","knight","bishop","rook","queen","king","white","black","castle_mask","ep_mask"};
 
   vector<long> bitboards=FEN_TO_BITBOARD(fen);
-
-  printboard(bitboards);
+  string move="";
+  bool color = true;
+  while(move!="0000"){
+    move="";
+    
+    vector<string> moves = pseudolegal_moves(bitboards, color);
+    while (find(moves.begin(), moves.end(), move) == moves.end()) {
+      printboard(bitboards);
+      cout << "[ ";
+      for(string m : moves){
+        cout << m << " ";
+      }
+      cout << "]" << '\n';
+      cout << "Choose a move" << endl;
+      cin >> move;
+      if(move=="0000"){
+        break;
+      }
+    }
+    if(move=="0000"){
+      break;
+    }
+    bitboards=make_move(bitboards, move);
+    color=!color;
+  }
 }
