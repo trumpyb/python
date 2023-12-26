@@ -706,7 +706,7 @@ int PERFT(int depth, vector<long>bitboards, bool color){
   vector<string> moves=legal_moves(bitboards, color);
 
   for(string move : moves){
-    node += PERFT(depth-1,make_move(bitboards, move), color);
+    node += PERFT(depth-1,make_move(bitboards, move), !color);
   }
   return node;
 }
@@ -721,7 +721,11 @@ int main() {
   if(fen.find('w')){
     color = true;
   }
-  cout << PERFT(2, bitboards, color);
+  vector<string> moves=legal_moves(bitboards, color);
+
+  for(int depth=0; depth<5; depth++){
+    cout << depth << " : " << PERFT(depth, bitboards, color) << '\n';
+  }
 }
 //Use Board
 /*
