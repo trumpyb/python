@@ -289,8 +289,8 @@ long bishopmoves(int square, vector<long> bitboards, bool color){
 
   if((onsquare&(NW))!=0){
     for(int x = 1; x<8; x++){
-      Candidate_moves_NW |= onsquare >> (7*x);
-      if( ((Candidate_moves_NW&blockers_board)!=0)||(file_find(square-(7*x))==0)){
+      Candidate_moves_NW |= onsquare >> (9*x);
+      if( ((Candidate_moves_NW&blockers_board)!=0)||(file_find(square-(x*9))==0)){
         break;
       }
     }
@@ -298,8 +298,8 @@ long bishopmoves(int square, vector<long> bitboards, bool color){
 
   if((onsquare&(SW))!=0){
     for(int x = 1; x<8; x++){
-      Candidate_moves_SW |= onsquare << (7*x);
-      if( ((Candidate_moves_SW&blockers_board)!=0)||(file_find(square+(7*x))==7)){
+      Candidate_moves_SW |= onsquare << (9*x);
+      if( ((Candidate_moves_SW&blockers_board)!=0)||(file_find(square+(9*x))==7)){
         break;
       }
     }
@@ -307,8 +307,8 @@ long bishopmoves(int square, vector<long> bitboards, bool color){
 
   if((onsquare&(NE))!=0){
     for(int x = 1; x<8; x++){
-      Candidate_moves_NE |= onsquare >> (9*x);
-      if( ((Candidate_moves_NE&blockers_board)!=0)||(rank_find(square-(9*x))==0)){
+      Candidate_moves_NE |= onsquare >> (7*x);
+      if( ((Candidate_moves_NE&blockers_board)!=0)||(rank_find(square-(7*x))==0)){
         break;
       }
     }
@@ -316,8 +316,8 @@ long bishopmoves(int square, vector<long> bitboards, bool color){
 
   if((onsquare&(SE))!=0){
     for(int x = 1; x<8; x++){
-      Candidate_moves_SE |= onsquare << (9*x);
-      if( ((Candidate_moves_SE&blockers_board)!=0)||(rank_find(square+(9*x))==0)){
+      Candidate_moves_SE |= onsquare << (7*x);
+      if( ((Candidate_moves_SE&blockers_board)!=0)||(rank_find(square+(7*x))==0)){
         break;
       }
     }
@@ -335,13 +335,6 @@ long bishopmoves(int square, vector<long> bitboards, bool color){
 
 long ATTACK_MASK(vector<long> bitboards, bool color){
   long output = 0;
-
-  bitset<64> pawn(bitboards[0]);
-  bitset<64> knight(bitboards[1]);
-  bitset<64> bishop(bitboards[2]);
-  bitset<64> rook(bitboards[3]);
-  bitset<64> queen(bitboards[4]);
-  bitset<64> king(bitboards[5]);
   
   if(color){
     bitset<64> pawn(bitboards[0]&bitboards[6]);
@@ -406,7 +399,6 @@ long ATTACK_MASK(vector<long> bitboards, bool color){
 
 vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
   vector<string> output={};
-  bitboards[9]=0;
 
   long attack_board=ATTACK_MASK(bitboards, !color);
   bitset<64> CASTLE_HAS_MOVED(bitboards[8]);
@@ -427,10 +419,21 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
     bitset<64> rook(bitboards[3]&bitboards[6]);
     bitset<64> queen(bitboards[4]&bitboards[6]);
     bitset<64> king(bitboards[5]&bitboards[6]);
+
+    bitset<64> en_passant(bitboards[9]);
     for(int x=0; x<64; x++){
+      if(en_passant[x]==1){
+        if(file_find(x)!=0&&pawn[x+1]==1){
+          output.push_back(names[x+1]+names[x-8]+"ep");
+        }
+        if(file_find(x)!=7&&pawn[x-1]==1){
+          output.push_back(names[x-1]+names[x-8]+"ep");
+        }
+      }
       for(int y=0; y<64; y++){
         
         string start=names[x];
+        
         if(pawn[x]==1){
           bitset<64> ppush(WHITE_PAWN_PUSH_PCB[x]&(~bitboards[7])&(~bitboards[6]));
           bitset<64> pcapt(WHITE_PAWN_CAPTURE_PCB[x]&bitboards[7]);
@@ -516,14 +519,24 @@ vector<string> pseudolegal_moves(vector<long> bitboards, bool color){
     bitset<64> rook(bitboards[3]&bitboards[7]);
     bitset<64> queen(bitboards[4]&bitboards[7]);
     bitset<64> king(bitboards[5]&bitboards[7]);
+
+    bitset<64> en_passant(bitboards[9]);
     
     for(int x=0; x<64; x++){
+      if(en_passant[x]==1){
+        if(file_find(x)!=0&&pawn[x+1]==1){
+          output.push_back(names[x+1]+names[x-8]+"ep");
+        }
+        if(file_find(x)!=7&&pawn[x-1]==1){
+          output.push_back(names[x-1]+names[x-8]+"ep");
+        }
+      }
       for(int y=0; y<64; y++){
         string start=names[x];
         
         if(pawn[x]==1){
           bitset<64> ppush(BLACK_PAWN_PUSH_PCB[x]&(~bitboards[7])&(~bitboards[6]));
-          bitset<64> pcapt(BLACK_PAWN_CAPTURE_PCB[x]&bitboards[7]);
+          bitset<64> pcapt(BLACK_PAWN_CAPTURE_PCB[x]&bitboards[6]);
 
             if(ppush[y]==1){
               
@@ -605,7 +618,14 @@ vector<long> make_move(vector<long> bitboards, string move){
   int start=lan(move.substr(0,2));
   int end=lan(move.substr(2,2));
   
-  
+  if(move.length()==6){
+    if(start<30){
+      bitboards=make_move(bitboards,names[end+8]+names[end]);
+    }
+    if(start>30){
+      bitboards=make_move(bitboards,names[end-8]+names[end]);
+    }
+  }
 
   vector<long> output={};
   
@@ -661,34 +681,80 @@ vector<long> make_move(vector<long> bitboards, string move){
   return output;
 }
 
+vector<string> legal_moves(vector<long> bitboards, bool color){
+  vector<string> moves=pseudolegal_moves(bitboards, color);
+  vector<string> output={};
+  int num=7;
+  if(color){
+    num=6;
+  }
+  for(string move:moves){
+    vector<long> bb=make_move(bitboards, move);
+    long squares_attacked=ATTACK_MASK(bb, !color);
+    if((bb[5]&bb[num]&squares_attacked)==0){
+      output.push_back(move);
+    }
+  }
+  return output;
+}
+
+int PERFT(int depth, vector<long>bitboards, bool color){
+  int node=0;
+  if(depth==0){
+    return 1ULL;
+  }
+  vector<string> moves=legal_moves(bitboards, color);
+
+  for(string move : moves){
+    node += PERFT(depth-1,make_move(bitboards, move), color);
+  }
+  return node;
+}
+
 int main() {
   string fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   vector<string> pieces={"pawn","knight","bishop","rook","queen","king","white","black","castle_mask","ep_mask"};
 
   vector<long> bitboards=FEN_TO_BITBOARD(fen);
   string move="";
-  bool color = true;
-  while(move!="0000"){
-    move="";
-    
-    vector<string> moves = pseudolegal_moves(bitboards, color);
-    while (find(moves.begin(), moves.end(), move) == moves.end()) {
-      printboard(bitboards);
-      cout << "[ ";
-      for(string m : moves){
-        cout << m << " ";
-      }
-      cout << "]" << '\n';
-      cout << "Choose a move" << endl;
-      cin >> move;
-      if(move=="0000"){
-        break;
-      }
+  bool color=false;
+  if(fen.find('w')){
+    color = true;
+  }
+  cout << PERFT(2, bitboards, color);
+}
+//Use Board
+/*
+string fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+vector<string> pieces={"pawn","knight","bishop","rook","queen","king","white","black","castle_mask","ep_mask"};
+
+vector<long> bitboards=FEN_TO_BITBOARD(fen);
+string move="";
+bool color=false;
+if(fen.find('w')){
+  color = true;
+}
+while(move!="0000"){
+  move="";
+
+  vector<string> moves = legal_moves(bitboards, color);
+  while (find(moves.begin(), moves.end(), move) == moves.end()) {
+    printboard(bitboards);
+    cout << "[ ";
+    for(string m : moves){
+      cout << m << " ";
     }
+    cout << "]" << '\n';
+    cout << "Choose a move" << endl;
+    cin >> move;
     if(move=="0000"){
       break;
     }
-    bitboards=make_move(bitboards, move);
-    color=!color;
   }
+  if(move=="0000"){
+    break;
+  }
+  bitboards=make_move(bitboards, move);
+  color=!color;
 }
+*/
